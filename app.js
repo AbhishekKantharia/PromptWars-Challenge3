@@ -637,6 +637,7 @@
             refreshAll();
             showToast(`Imported ${activities.length} activities! ✅`);
           } catch (err) {
+            console.warn('[CarbonLens] Import failed:', err);
             showToast('Invalid backup file format.');
           }
         };

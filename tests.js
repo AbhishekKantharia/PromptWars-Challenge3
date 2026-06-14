@@ -41,7 +41,7 @@ const TestRunner = (() => {
 
   function assertThrows(fn, message) {
     let threw = false;
-    try { fn(); } catch (e) { threw = true; }
+    try { fn(); } catch (_) { threw = true; }
     assert(threw, message);
   }
 
@@ -71,12 +71,13 @@ function runAllTests() {
   testStorageHelpers();
   testAchievements();
   testDeleteActivity();
+  testCharts();
   return TestRunner.report();
 }
 
 /* ---- Emission Factors ---- */
 function testEmissionFactors() {
-  const { assert, assertEqual, assertApprox } = TestRunner;
+  const { assert, assertApprox } = TestRunner;
 
   // Transport factors exist
   assert(EMISSION_FACTORS.transport.car === 0.21, 'Car emission factor is 0.21 kg/km');
@@ -129,7 +130,7 @@ function testDateHelpers() {
 
 /* ---- Activity Computation ---- */
 function testActivityComputation() {
-  const { assert, assertApprox, assertEqual } = TestRunner;
+  const { assertApprox, assertEqual } = TestRunner;
 
   const now = new Date().toISOString();
   const mockActivities = [
@@ -183,7 +184,7 @@ function testEcoScore() {
 
 /* ---- Streak ---- */
 function testStreak() {
-  const { assert, assertEqual } = TestRunner;
+  const { assertEqual } = TestRunner;
 
   // No activities → 0 streak
   assertEqual(getStreak([]), 0, 'Empty activities gives 0 streak');
@@ -225,7 +226,7 @@ function testSanitization() {
 
 /* ---- Validation ---- */
 function testValidation() {
-  const { assert, assertEqual } = TestRunner;
+  const { assertEqual } = TestRunner;
 
   // Valid numeric inputs
   assertEqual(validateNumericInput('10', 0, 100), 10, 'Valid number accepted');
@@ -268,7 +269,7 @@ function testCategoryTotals() {
 
 /* ---- Storage Helpers ---- */
 function testStorageHelpers() {
-  const { assert, assertEqual } = TestRunner;
+  const { assertEqual } = TestRunner;
 
   // safeLoadJSON handles missing keys
   const missing = safeLoadJSON('__nonexistent_key_test__');
@@ -323,7 +324,7 @@ function testAchievements() {
 
 /* ---- Delete Activity ---- */
 function testDeleteActivity() {
-  const { assert, assertEqual } = TestRunner;
+  const { assertEqual } = TestRunner;
   const initial = [
     { id: 'act-1', category: 'food', co2: 2.5 },
     { id: 'act-2', category: 'transport', co2: 5.0 }
@@ -333,6 +334,44 @@ function testDeleteActivity() {
   const filtered = initial.filter(a => a.id !== 'act-1');
   assertEqual(filtered.length, 1, 'One activity remaining after deletion');
   assertEqual(filtered[0].id, 'act-2', 'Correct activity remains');
+}
+
+/* ---- Charts module tests ---- */
+function testCharts() {
+  const { assert } = TestRunner;
+
+  // Test setupHiDPICanvas
+  const canvas = document.getElementById('chart-weekly');
+  assert(canvas !== null, 'Weekly chart canvas element exists');
+  
+  // Test drawing weekly chart
+  try {
+    drawWeeklyChart('chart-weekly', [
+      { date: '2026-06-14', label: 'Sun', total: 5.5 },
+      { date: '2026-06-13', label: 'Sat', total: 2.1 }
+    ]);
+    assert(true, 'drawWeeklyChart completed without throwing');
+  } catch (err) {
+    assert(false, `drawWeeklyChart threw error: ${err.message}`);
+  }
+
+  // Test drawing breakdown chart
+  try {
+    drawBreakdownChart('chart-breakdown', {
+      transport: 5.0, food: 3.2, energy: 0, shopping: 15.0
+    });
+    assert(true, 'drawBreakdownChart completed without throwing');
+  } catch (err) {
+    assert(false, `drawBreakdownChart threw error: ${err.message}`);
+  }
+
+  // Test drawing score ring
+  try {
+    drawScoreRing('score-ring', 85);
+    assert(true, 'drawScoreRing completed without throwing');
+  } catch (err) {
+    assert(false, `drawScoreRing threw error: ${err.message}`);
+  }
 }
 
 /* ============================================================

@@ -25,8 +25,116 @@
   <div id="test-summary">Running tests...</div>
   <div id="test-output"></div>
 
-  <!-- Load source files (data layer provides all testable functions) -->
+  <!-- Hidden DOM Skeleton to prevent app.js and charts.js from throwing -->
+  <div style="display: none;">
+    <!-- Navigation -->
+    <nav id="main-nav">
+      <div class="nav-links">
+        <button class="nav-btn" data-section="dashboard" id="nav-dashboard"></button>
+        <button class="nav-btn" data-section="log" id="nav-log"></button>
+        <button class="nav-btn" data-section="insights" id="nav-insights"></button>
+        <button class="nav-btn" data-section="achievements" id="nav-achievements"></button>
+      </div>
+      <button class="nav-profile" id="nav-profile"></button>
+    </nav>
+
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal">
+      <h2 id="onboarding-title"></h2>
+      <p></p>
+      <form id="onboarding-form">
+        <input type="text" id="user-name">
+        <span id="name-error"></span>
+        <select id="user-country">
+          <option value="global"></option>
+          <option value="us"></option>
+        </select>
+        <input type="radio" name="diet" value="omnivore">
+        <input type="radio" name="diet" value="vegetarian">
+        <input type="radio" name="diet" value="vegan">
+        <button type="button" id="onboarding-cancel"></button>
+        <button type="submit" id="onboarding-submit"></button>
+      </form>
+    </div>
+
+    <!-- Main Content -->
+    <main id="app-content">
+      <section class="page" id="section-dashboard">
+        <h1 id="greeting"></h1>
+        <time id="date-badge"></time>
+        <span id="val-today">0.0</span>
+        <span id="val-week">0.0</span>
+        <span id="val-month">0.0</span>
+        <span id="val-trees">0</span>
+        <canvas id="chart-weekly" width="500" height="220"></canvas>
+        <canvas id="chart-breakdown" width="300" height="220"></canvas>
+        <div id="comp-you"></div>
+        <div id="comp-you-val"></div>
+        <div id="comp-avg"></div>
+        <div id="comp-avg-val"></div>
+        <div id="comp-target"></div>
+        <div id="recent-list"></div>
+      </section>
+
+      <section class="page" id="section-log">
+        <button class="cat-tab" data-cat="transport" id="tab-transport"></button>
+        <button class="cat-tab" data-cat="food" id="tab-food"></button>
+        <button class="cat-tab" data-cat="energy" id="tab-energy"></button>
+        <button class="cat-tab" data-cat="shopping" id="tab-shopping"></button>
+
+        <div class="log-form" id="form-transport">
+          <input type="radio" name="transport-type" value="car">
+          <input type="number" id="transport-dist">
+          <span id="est-transport">0.00 kg CO₂</span>
+          <button id="btn-log-transport"></button>
+        </div>
+
+        <div class="log-form" id="form-food">
+          <input type="radio" name="food-type" value="beef">
+          <input type="number" id="food-servings">
+          <span id="est-food">0.00 kg CO₂</span>
+          <button id="btn-log-food"></button>
+        </div>
+
+        <div class="log-form" id="form-energy">
+          <input type="radio" name="energy-type" value="electricity">
+          <input type="number" id="energy-amount">
+          <span id="est-energy">0.00 kg CO₂</span>
+          <button id="btn-log-energy"></button>
+        </div>
+
+        <div class="log-form" id="form-shopping">
+          <input type="radio" name="shopping-type" value="clothing">
+          <input type="number" id="shopping-qty">
+          <span id="est-shopping">0.00 kg CO₂</span>
+          <button id="btn-log-shopping"></button>
+        </div>
+
+        <div class="toast" id="toast"><span id="toast-msg"></span></div>
+      </section>
+
+      <section class="page" id="section-insights">
+        <span id="eco-score"></span>
+        <canvas id="score-ring" width="180" height="180"></canvas>
+        <span id="eco-title"></span>
+        <span id="eco-desc"></span>
+        <div id="insights-list"></div>
+      </section>
+
+      <section class="page" id="section-achievements">
+        <div id="achievements-list"></div>
+        <button id="btn-export"></button>
+        <button id="btn-import"></button>
+        <input type="file" id="import-file">
+        <button id="btn-clear"></button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Load all source files to track full code coverage -->
   <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
   <script src="tests.js"></script>
 </body>
 </html>
