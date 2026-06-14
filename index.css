@@ -475,5 +475,16 @@ body {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
+/* ---- Delete Button ---- */
+.btn-delete {
+  background: transparent; border: none; color: rgba(255,255,255,0.3);
+  font-size: 20px; cursor: pointer; padding: 4px 8px; transition: var(--transition);
+  margin-left: 8px; border-radius: 50%; width: 28px; height: 28px;
+  display: grid; place-items: center; line-height: 1;
+}
+.btn-delete:hover {
+  background: rgba(239,68,68,0.15); color: #f87171;
+}
+
 /* ---- Selection ---- */
 ::selection { background: rgba(52,211,153,0.3); color: #fff; }

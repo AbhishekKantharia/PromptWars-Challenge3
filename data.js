@@ -192,8 +192,8 @@ function getStreak(acts) {
   for (const d of dates) {
     if (d === expected) {
       streak++;
-      const prev = new Date(expected + 'T00:00:00');
-      prev.setDate(prev.getDate() - 1);
+      const prev = new Date(expected + 'T00:00:00Z');
+      prev.setUTCDate(prev.getUTCDate() - 1);
       expected = prev.toISOString().slice(0, 10);
     } else if (d < expected) {
       break;
@@ -222,9 +222,13 @@ function computeEcoScore(acts, profile) {
  * @returns {string} Sanitized string safe for innerHTML.
  */
 function sanitizeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**

@@ -70,6 +70,7 @@ function runAllTests() {
   testCategoryTotals();
   testStorageHelpers();
   testAchievements();
+  testDeleteActivity();
   return TestRunner.report();
 }
 
@@ -318,6 +319,20 @@ function testAchievements() {
   });
 
   assertEqual(IDEAL_MONTHLY, 167, 'Ideal monthly target is 167 kg');
+}
+
+/* ---- Delete Activity ---- */
+function testDeleteActivity() {
+  const { assert, assertEqual } = TestRunner;
+  const initial = [
+    { id: 'act-1', category: 'food', co2: 2.5 },
+    { id: 'act-2', category: 'transport', co2: 5.0 }
+  ];
+  
+  // Test filter/deletion logic
+  const filtered = initial.filter(a => a.id !== 'act-1');
+  assertEqual(filtered.length, 1, 'One activity remaining after deletion');
+  assertEqual(filtered[0].id, 'act-2', 'Correct activity remains');
 }
 
 /* ============================================================

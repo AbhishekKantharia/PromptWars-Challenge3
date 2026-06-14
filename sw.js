@@ -2,7 +2,7 @@
    CarbonLens — Service Worker (Offline-first PWA)
    ============================================================ */
 
-const CACHE_NAME = 'carbonlens-v1';
+const CACHE_NAME = 'carbonlens-v2';
 const ASSETS = [
   '/',
   '/index.html',

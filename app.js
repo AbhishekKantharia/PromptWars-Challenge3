@@ -20,21 +20,67 @@
      Initialization
      ============================================================ */
   function init() {
-    if (!profile) {
-      document.getElementById('onboarding-modal').classList.add('visible');
-      // Trap focus inside modal for accessibility
-      trapFocusInModal('onboarding-modal');
-    } else {
-      document.getElementById('onboarding-modal').classList.remove('visible');
-      updateGreeting();
-      refreshAll();
-    }
     setupNav();
     setupOnboarding();
     setupLogForms();
     setupDataExport();
     setupKeyboardShortcuts();
     setDateBadge();
+
+    const recentList = document.getElementById('recent-list');
+    if (recentList) {
+      recentList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-delete');
+        if (btn) {
+          const id = btn.dataset.id;
+          deleteActivity(id);
+        }
+      });
+    }
+
+    if (!profile) {
+      openOnboardingModal(false);
+    } else {
+      document.getElementById('onboarding-modal').classList.remove('visible');
+      updateGreeting();
+      refreshAll();
+    }
+  }
+
+  /* ============================================================
+     Onboarding / Profile setup modal display
+     ============================================================ */
+  function openOnboardingModal(isEditing) {
+    const modal = document.getElementById('onboarding-modal');
+    const title = document.getElementById('onboarding-title');
+    const submitBtn = document.getElementById('onboarding-submit');
+    const cancelBtn = document.getElementById('onboarding-cancel');
+    const nameInput = document.getElementById('user-name');
+    const nameError = document.getElementById('name-error');
+
+    nameError.textContent = '';
+    nameInput.removeAttribute('aria-invalid');
+
+    if (isEditing && profile) {
+      title.textContent = 'Edit Profile';
+      submitBtn.textContent = 'Save Changes';
+      cancelBtn.style.display = 'block';
+      nameInput.value = profile.name;
+      document.getElementById('user-country').value = profile.country;
+      const radio = document.querySelector(`input[name="diet"][value="${profile.diet}"]`);
+      if (radio) radio.checked = true;
+    } else {
+      title.textContent = 'Welcome to CarbonLens';
+      submitBtn.textContent = 'Get Started';
+      cancelBtn.style.display = 'none';
+      nameInput.value = '';
+      document.getElementById('user-country').value = 'global';
+      const defaultRadio = document.querySelector('input[name="diet"][value="omnivore"]');
+      if (defaultRadio) defaultRadio.checked = true;
+    }
+
+    modal.classList.add('visible');
+    trapFocusInModal('onboarding-modal');
   }
 
   /* ============================================================
@@ -135,6 +181,22 @@
     const form = document.getElementById('onboarding-form');
     const nameInput = document.getElementById('user-name');
     const nameError = document.getElementById('name-error');
+    const cancelBtn = document.getElementById('onboarding-cancel');
+    const profileBtn = document.getElementById('nav-profile');
+
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        openOnboardingModal(true);
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (profile) {
+          document.getElementById('onboarding-modal').classList.remove('visible');
+        }
+      });
+    }
 
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -150,18 +212,19 @@
 
       // Sanitize input
       const sanitizedName = sanitizeHTML(name);
+      const isNew = !profile;
 
       profile = {
         name: sanitizedName,
         country: document.getElementById('user-country').value,
         diet: document.querySelector('input[name="diet"]:checked').value,
-        joinDate: todayStr()
+        joinDate: profile ? profile.joinDate : todayStr()
       };
       saveProfile(profile);
       document.getElementById('onboarding-modal').classList.remove('visible');
       updateGreeting();
       refreshAll();
-      showToast(`Welcome, ${sanitizedName}! 🌱 Let's start tracking.`);
+      showToast(isNew ? `Welcome, ${sanitizedName}! 🌱 Let's start tracking.` : 'Profile updated successfully! ✅');
     });
 
     // Clear error on input
@@ -218,42 +281,78 @@
       return (EMISSION_FACTORS.shopping[type] || 0) * qty;
     });
 
+    const transportDist = document.getElementById('transport-dist');
+    const foodServings = document.getElementById('food-servings');
+    const energyAmount = document.getElementById('energy-amount');
+    const shoppingQty = document.getElementById('shopping-qty');
+
+    // Clear aria-invalid on input
+    [transportDist, foodServings, energyAmount, shoppingQty].forEach(input => {
+      if (input) {
+        input.addEventListener('input', () => {
+          input.removeAttribute('aria-invalid');
+        });
+      }
+    });
+
     // Log buttons
     document.getElementById('btn-log-transport').addEventListener('click', () => {
       const type = document.querySelector('input[name="transport-type"]:checked')?.value;
-      const dist = validateNumericInput(document.getElementById('transport-dist').value, 0, 50000);
-      if (dist === null) { showToast('Please enter a valid distance.'); return; }
+      const dist = validateNumericInput(transportDist.value, 0, 50000);
+      if (dist === null) {
+        showToast('Please enter a valid distance.');
+        transportDist.setAttribute('aria-invalid', 'true');
+        transportDist.focus();
+        return;
+      }
       const co2 = (EMISSION_FACTORS.transport[type] || 0) * dist;
       addActivity('transport', type, co2, `${dist} km by ${type}`);
-      document.getElementById('transport-dist').value = '';
+      transportDist.value = '';
       updatePreview('transport', 0);
     });
 
     document.getElementById('btn-log-food').addEventListener('click', () => {
       const type = document.querySelector('input[name="food-type"]:checked')?.value;
-      const srv = validateNumericInput(document.getElementById('food-servings').value, 1, 100) || 1;
+      const srv = validateNumericInput(foodServings.value, 1, 100);
+      if (srv === null) {
+        showToast('Please enter a valid number of servings (1-100).');
+        foodServings.setAttribute('aria-invalid', 'true');
+        foodServings.focus();
+        return;
+      }
       const co2 = (EMISSION_FACTORS.food[type] || 0) * srv;
       addActivity('food', type, co2, `${srv} ${type} meal(s)`);
-      document.getElementById('food-servings').value = '1';
+      foodServings.value = '1';
       updatePreview('food', EMISSION_FACTORS.food[type]);
     });
 
     document.getElementById('btn-log-energy').addEventListener('click', () => {
       const type = document.querySelector('input[name="energy-type"]:checked')?.value;
-      const amt = validateNumericInput(document.getElementById('energy-amount').value, 0.1, 100000);
-      if (amt === null) { showToast('Please enter a valid amount.'); return; }
+      const amt = validateNumericInput(energyAmount.value, 0.1, 100000);
+      if (amt === null) {
+        showToast('Please enter a valid amount.');
+        energyAmount.setAttribute('aria-invalid', 'true');
+        energyAmount.focus();
+        return;
+      }
       const co2 = (EMISSION_FACTORS.energy[type] || 0) * amt;
       addActivity('energy', type, co2, `${amt} units of ${type}`);
-      document.getElementById('energy-amount').value = '';
+      energyAmount.value = '';
       updatePreview('energy', 0);
     });
 
     document.getElementById('btn-log-shopping').addEventListener('click', () => {
       const type = document.querySelector('input[name="shopping-type"]:checked')?.value;
-      const qty = validateNumericInput(document.getElementById('shopping-qty').value, 1, 1000) || 1;
+      const qty = validateNumericInput(shoppingQty.value, 1, 1000);
+      if (qty === null) {
+        showToast('Please enter a valid quantity (1-1000).');
+        shoppingQty.setAttribute('aria-invalid', 'true');
+        shoppingQty.focus();
+        return;
+      }
       const co2 = (EMISSION_FACTORS.shopping[type] || 0) * qty;
       addActivity('shopping', type, co2, `${qty} ${type} item(s)`);
-      document.getElementById('shopping-qty').value = '1';
+      shoppingQty.value = '1';
       updatePreview('shopping', EMISSION_FACTORS.shopping[type]);
     });
   }
@@ -388,8 +487,16 @@
           <span class="recent-time">${timeAgo}</span>
         </div>
         <span class="recent-co2">${a.co2.toFixed(2)} kg</span>
+        <button class="btn-delete" data-id="${a.id}" aria-label="Delete activity: ${a.description}" title="Delete activity">&times;</button>
       </div>`;
     }).join('');
+  }
+
+  function deleteActivity(id) {
+    activities = activities.filter(a => a.id !== id);
+    saveActivities(activities);
+    showToast('Activity deleted successfully! 🗑️');
+    refreshAll();
   }
 
   function getTimeAgo(dateStr) {
