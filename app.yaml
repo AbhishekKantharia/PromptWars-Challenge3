@@ -1,0 +1,31 @@
+runtime: python312
+
+handlers:
+  # Serve static files
+  - url: /(.+\.(js|css|json|html|ico|svg|png|jpg|webp))$
+    static_files: \1
+    upload: .+\.(js|css|json|html|ico|svg|png|jpg|webp)$
+    secure: always
+    http_headers:
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: DENY
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: strict-origin-when-cross-origin
+      Cache-Control: "public, max-age=3600"
+
+  # Root serves index.html
+  - url: /
+    static_files: index.html
+    upload: index.html
+    secure: always
+    http_headers:
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: DENY
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: strict-origin-when-cross-origin
+
+  # Catch-all for SPA routing
+  - url: /.*
+    static_files: index.html
+    upload: index.html
+    secure: always

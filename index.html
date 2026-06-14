@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonLens — Track &amp; Reduce Your Carbon Footprint</title>
+  <meta name="description" content="Understand, track, and reduce your carbon footprint with personalized insights, activity logging, and actionable sustainability recommendations.">
+  <meta name="author" content="CarbonLens">
+  <meta name="theme-color" content="#070d17">
+
+  <!-- Security: Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; 
+               script-src 'self'; 
+               style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; 
+               font-src https://fonts.gstatic.com; 
+               img-src 'self' data:; 
+               connect-src 'self';">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- Skip to Main Content — Accessibility -->
+  <a href="#app-content" class="skip-link" id="skip-link">Skip to main content</a>
+
+  <!-- Ambient Background (decorative, hidden from screen readers) -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav id="main-nav" aria-label="Main navigation">
+    <div class="nav-brand">
+      <div class="nav-logo" aria-hidden="true">🌱</div>
+      <span class="nav-title">CarbonLens</span>
+    </div>
+    <div class="nav-links" role="tablist" aria-label="App sections">
+      <button class="nav-btn active" data-section="dashboard" id="nav-dashboard" role="tab" aria-selected="true" aria-controls="section-dashboard" tabindex="0">Dashboard</button>
+      <button class="nav-btn" data-section="log" id="nav-log" role="tab" aria-selected="false" aria-controls="section-log" tabindex="-1">Log Activity</button>
+      <button class="nav-btn" data-section="insights" id="nav-insights" role="tab" aria-selected="false" aria-controls="section-insights" tabindex="-1">Insights</button>
+      <button class="nav-btn" data-section="achievements" id="nav-achievements" role="tab" aria-selected="false" aria-controls="section-achievements" tabindex="-1">Achievements</button>
+    </div>
+    <button class="nav-profile" id="nav-profile" aria-label="User profile" title="User profile">
+      <div class="profile-avatar" aria-hidden="true">🧑‍🌾</div>
+    </button>
+  </nav>
+
+  <!-- Onboarding Modal -->
+  <div class="modal-overlay" id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="modal-card">
+      <div class="modal-icon" aria-hidden="true">🌍</div>
+      <h2 id="onboarding-title">Welcome to CarbonLens</h2>
+      <p>Let's personalize your experience. Tell us a bit about yourself.</p>
+      <form id="onboarding-form" novalidate>
+        <div class="form-group">
+          <label for="user-name">Your Name</label>
+          <input type="text" id="user-name" placeholder="e.g., Alex" required autocomplete="given-name" maxlength="50" aria-required="true">
+          <span class="form-error" id="name-error" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="form-group">
+          <label for="user-country">Country</label>
+          <select id="user-country" autocomplete="country">
+            <option value="global">Global Average</option>
+            <option value="us">United States</option>
+            <option value="uk">United Kingdom</option>
+            <option value="in">India</option>
+            <option value="de">Germany</option>
+            <option value="au">Australia</option>
+            <option value="ca">Canada</option>
+            <option value="jp">Japan</option>
+            <option value="br">Brazil</option>
+            <option value="cn">China</option>
+          </select>
+        </div>
+        <fieldset class="form-group">
+          <legend>Your diet preference</legend>
+          <div class="radio-group">
+            <label class="radio-card"><input type="radio" name="diet" value="omnivore" checked><span>🥩 Omnivore</span></label>
+            <label class="radio-card"><input type="radio" name="diet" value="vegetarian"><span>🥗 Vegetarian</span></label>
+            <label class="radio-card"><input type="radio" name="diet" value="vegan"><span>🌿 Vegan</span></label>
+          </div>
+        </fieldset>
+        <button type="submit" class="btn-primary" id="onboarding-submit">Get Started</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="app-content">
+
+    <!-- DASHBOARD SECTION -->
+    <section class="page active" id="section-dashboard" role="tabpanel" aria-labelledby="nav-dashboard">
+      <header class="section-header">
+        <div>
+          <h1 id="greeting">Good morning, User!</h1>
+          <p class="subtitle">Here's your carbon footprint overview</p>
+        </div>
+        <time class="date-badge" id="date-badge" aria-label="Current date"></time>
+      </header>
+
+      <!-- Stat Cards -->
+      <div class="stats-grid" aria-label="Emission statistics">
+        <article class="stat-card stat-today" id="stat-today">
+          <div class="stat-icon" aria-hidden="true">📅</div>
+          <div class="stat-info">
+            <span class="stat-label">Today</span>
+            <span class="stat-value" id="val-today" aria-live="polite">0.0</span>
+            <span class="stat-unit">kg CO₂</span>
+          </div>
+        </article>
+        <article class="stat-card stat-week" id="stat-week">
+          <div class="stat-icon" aria-hidden="true">📊</div>
+          <div class="stat-info">
+            <span class="stat-label">This Week</span>
+            <span class="stat-value" id="val-week" aria-live="polite">0.0</span>
+            <span class="stat-unit">kg CO₂</span>
+          </div>
+        </article>
+        <article class="stat-card stat-month" id="stat-month">
+          <div class="stat-icon" aria-hidden="true">🗓️</div>
+          <div class="stat-info">
+            <span class="stat-label">This Month</span>
+            <span class="stat-value" id="val-month" aria-live="polite">0.0</span>
+            <span class="stat-unit">kg CO₂</span>
+          </div>
+        </article>
+        <article class="stat-card stat-saved" id="stat-saved">
+          <div class="stat-icon" aria-hidden="true">🌳</div>
+          <div class="stat-info">
+            <span class="stat-label">Trees Equivalent</span>
+            <span class="stat-value" id="val-trees" aria-live="polite">0</span>
+            <span class="stat-unit">trees / year needed</span>
+          </div>
+        </article>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <article class="chart-card">
+          <h2 class="chart-title">7-Day Trend</h2>
+          <canvas id="chart-weekly" width="500" height="220" role="img" aria-label="Bar chart showing CO₂ emissions for the last 7 days"></canvas>
+        </article>
+        <article class="chart-card">
+          <h2 class="chart-title">Breakdown by Category</h2>
+          <canvas id="chart-breakdown" width="300" height="220" role="img" aria-label="Donut chart showing emission breakdown by category"></canvas>
+        </article>
+      </div>
+
+      <!-- Comparison Bar -->
+      <article class="comparison-card" id="comparison-card">
+        <h2 class="chart-title">How You Compare</h2>
+        <div class="comparison-bars">
+          <div class="comp-row">
+            <span class="comp-label" id="comp-you-label">You (monthly)</span>
+            <div class="comp-bar-track" role="progressbar" aria-labelledby="comp-you-label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="comp-bar comp-you" id="comp-you"></div></div>
+            <span class="comp-val" id="comp-you-val">0 kg</span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label" id="comp-avg-label">Country Avg</span>
+            <div class="comp-bar-track" role="progressbar" aria-labelledby="comp-avg-label"><div class="comp-bar comp-avg" id="comp-avg"></div></div>
+            <span class="comp-val" id="comp-avg-val">0 kg</span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label" id="comp-target-label">Ideal Target</span>
+            <div class="comp-bar-track" role="progressbar" aria-labelledby="comp-target-label"><div class="comp-bar comp-target" id="comp-target"></div></div>
+            <span class="comp-val" id="comp-target-val">167 kg</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Recent Activity -->
+      <article class="recent-card">
+        <h2 class="chart-title">Recent Activities</h2>
+        <div id="recent-list" class="recent-list" role="list" aria-label="Recent logged activities">
+          <p class="empty-state" role="status">No activities logged yet. Start by logging your first activity! 🚀</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- LOG ACTIVITY SECTION -->
+    <section class="page" id="section-log" role="tabpanel" aria-labelledby="nav-log">
+      <header class="section-header">
+        <div>
+          <h1>Log Activity</h1>
+          <p class="subtitle">Record your daily activities to track your carbon impact</p>
+        </div>
+      </header>
+      <div class="category-tabs" role="tablist" aria-label="Activity categories">
+        <button class="cat-tab active" data-cat="transport" id="tab-transport" role="tab" aria-selected="true" aria-controls="form-transport">🚗 Transport</button>
+        <button class="cat-tab" data-cat="food" id="tab-food" role="tab" aria-selected="false" aria-controls="form-food">🍽️ Food</button>
+        <button class="cat-tab" data-cat="energy" id="tab-energy" role="tab" aria-selected="false" aria-controls="form-energy">⚡ Energy</button>
+        <button class="cat-tab" data-cat="shopping" id="tab-shopping" role="tab" aria-selected="false" aria-controls="form-shopping">🛍️ Shopping</button>
+      </div>
+
+      <!-- Transport Form -->
+      <div class="log-form active" id="form-transport" role="tabpanel" aria-labelledby="tab-transport">
+        <fieldset class="activity-cards">
+          <legend class="sr-only">Select transport type</legend>
+          <label class="activity-option"><input type="radio" name="transport-type" value="car" checked>
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🚗</span><span>Car</span><span class="act-factor">0.21 kg/km</span></div></label>
+          <label class="activity-option"><input type="radio" name="transport-type" value="bus">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🚌</span><span>Bus</span><span class="act-factor">0.089 kg/km</span></div></label>
+          <label class="activity-option"><input type="radio" name="transport-type" value="train">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🚆</span><span>Train</span><span class="act-factor">0.041 kg/km</span></div></label>
+          <label class="activity-option"><input type="radio" name="transport-type" value="flight">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">✈️</span><span>Flight</span><span class="act-factor">0.255 kg/km</span></div></label>
+          <label class="activity-option"><input type="radio" name="transport-type" value="bike">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🚲</span><span>Bicycle</span><span class="act-factor">0 kg/km</span></div></label>
+          <label class="activity-option"><input type="radio" name="transport-type" value="walk">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🚶</span><span>Walking</span><span class="act-factor">0 kg/km</span></div></label>
+        </fieldset>
+        <div class="form-row">
+          <div class="form-group"><label for="transport-dist">Distance (km)</label><input type="number" id="transport-dist" min="0" max="50000" step="0.1" placeholder="e.g., 15" aria-describedby="est-transport"></div>
+        </div>
+        <div class="emission-preview" id="preview-transport" aria-live="polite"><span>Estimated:</span><strong id="est-transport">0.00 kg CO₂</strong></div>
+        <button class="btn-primary btn-log" id="btn-log-transport">Log Transport</button>
+      </div>
+
+      <!-- Food Form -->
+      <div class="log-form" id="form-food" role="tabpanel" aria-labelledby="tab-food">
+        <fieldset class="activity-cards">
+          <legend class="sr-only">Select meal type</legend>
+          <label class="activity-option"><input type="radio" name="food-type" value="beef" checked>
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🥩</span><span>Beef Meal</span><span class="act-factor">6.61 kg/meal</span></div></label>
+          <label class="activity-option"><input type="radio" name="food-type" value="chicken">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🍗</span><span>Chicken</span><span class="act-factor">3.20 kg/meal</span></div></label>
+          <label class="activity-option"><input type="radio" name="food-type" value="fish">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🐟</span><span>Fish Meal</span><span class="act-factor">2.80 kg/meal</span></div></label>
+          <label class="activity-option"><input type="radio" name="food-type" value="vegetarian">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🥗</span><span>Vegetarian</span><span class="act-factor">1.70 kg/meal</span></div></label>
+          <label class="activity-option"><input type="radio" name="food-type" value="vegan">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🌿</span><span>Vegan</span><span class="act-factor">0.90 kg/meal</span></div></label>
+        </fieldset>
+        <div class="form-row">
+          <div class="form-group"><label for="food-servings">Servings</label><input type="number" id="food-servings" min="1" max="100" step="1" value="1" aria-describedby="est-food"></div>
+        </div>
+        <div class="emission-preview" id="preview-food" aria-live="polite"><span>Estimated:</span><strong id="est-food">6.61 kg CO₂</strong></div>
+        <button class="btn-primary btn-log" id="btn-log-food">Log Meal</button>
+      </div>
+
+      <!-- Energy Form -->
+      <div class="log-form" id="form-energy" role="tabpanel" aria-labelledby="tab-energy">
+        <fieldset class="activity-cards">
+          <legend class="sr-only">Select energy type</legend>
+          <label class="activity-option"><input type="radio" name="energy-type" value="electricity" checked>
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">💡</span><span>Electricity</span><span class="act-factor">0.50 kg/kWh</span></div></label>
+          <label class="activity-option"><input type="radio" name="energy-type" value="gas">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🔥</span><span>Natural Gas</span><span class="act-factor">2.00 kg/m³</span></div></label>
+          <label class="activity-option"><input type="radio" name="energy-type" value="heating">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🌡️</span><span>Heating Oil</span><span class="act-factor">2.52 kg/L</span></div></label>
+        </fieldset>
+        <div class="form-row">
+          <div class="form-group"><label for="energy-amount">Amount (kWh / m³ / L)</label><input type="number" id="energy-amount" min="0" max="100000" step="0.1" placeholder="e.g., 10" aria-describedby="est-energy"></div>
+        </div>
+        <div class="emission-preview" id="preview-energy" aria-live="polite"><span>Estimated:</span><strong id="est-energy">0.00 kg CO₂</strong></div>
+        <button class="btn-primary btn-log" id="btn-log-energy">Log Energy Use</button>
+      </div>
+
+      <!-- Shopping Form -->
+      <div class="log-form" id="form-shopping" role="tabpanel" aria-labelledby="tab-shopping">
+        <fieldset class="activity-cards">
+          <legend class="sr-only">Select purchase type</legend>
+          <label class="activity-option"><input type="radio" name="shopping-type" value="clothing" checked>
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">👕</span><span>Clothing</span><span class="act-factor">~15 kg/item</span></div></label>
+          <label class="activity-option"><input type="radio" name="shopping-type" value="electronics">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">📱</span><span>Electronics</span><span class="act-factor">~50 kg/item</span></div></label>
+          <label class="activity-option"><input type="radio" name="shopping-type" value="furniture">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🪑</span><span>Furniture</span><span class="act-factor">~80 kg/item</span></div></label>
+          <label class="activity-option"><input type="radio" name="shopping-type" value="groceries">
+            <div class="act-card"><span class="act-emoji" aria-hidden="true">🛒</span><span>Groceries</span><span class="act-factor">~3 kg/bag</span></div></label>
+        </fieldset>
+        <div class="form-row">
+          <div class="form-group"><label for="shopping-qty">Quantity</label><input type="number" id="shopping-qty" min="1" max="1000" step="1" value="1" aria-describedby="est-shopping"></div>
+        </div>
+        <div class="emission-preview" id="preview-shopping" aria-live="polite"><span>Estimated:</span><strong id="est-shopping">15.00 kg CO₂</strong></div>
+        <button class="btn-primary btn-log" id="btn-log-shopping">Log Purchase</button>
+      </div>
+
+      <!-- Success Toast (aria-live for screen readers) -->
+      <div class="toast" id="toast" role="status" aria-live="assertive" aria-atomic="true">
+        <span class="toast-icon" aria-hidden="true">✅</span><span id="toast-msg">Activity logged!</span>
+      </div>
+    </section>
+
+    <!-- INSIGHTS SECTION -->
+    <section class="page" id="section-insights" role="tabpanel" aria-labelledby="nav-insights">
+      <header class="section-header">
+        <div>
+          <h1>Personalized Insights</h1>
+          <p class="subtitle">Actionable tips to reduce your carbon footprint</p>
+        </div>
+      </header>
+      <article class="insight-score-card">
+        <div class="score-ring-wrap">
+          <canvas id="score-ring" width="180" height="180" role="img" aria-label="Eco score gauge"></canvas>
+          <div class="score-center" aria-hidden="true">
+            <span class="score-val" id="eco-score">72</span>
+            <span class="score-lbl">Eco Score</span>
+          </div>
+        </div>
+        <div class="score-detail">
+          <h2 id="eco-title">You're doing well!</h2>
+          <p id="eco-desc">Your carbon footprint is below the national average. Here are some ways to improve further.</p>
+        </div>
+      </article>
+      <h2 class="sr-only">Sustainability Tips</h2>
+      <div class="insights-grid" id="insights-grid" aria-label="Sustainability tips">
+        <!-- Populated by JS -->
+      </div>
+      <article class="challenge-card">
+        <h2 class="challenge-heading">🎯 Weekly Challenge</h2>
+        <p id="weekly-challenge">Try going car-free for 3 days this week!</p>
+        <div class="challenge-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3" aria-label="Weekly challenge progress">
+          <div class="challenge-bar" id="challenge-bar" style="width:0%"></div>
+        </div>
+        <span class="challenge-status" id="challenge-status">0 / 3 days completed</span>
+      </article>
+    </section>
+
+    <!-- ACHIEVEMENTS SECTION -->
+    <section class="page" id="section-achievements" role="tabpanel" aria-labelledby="nav-achievements">
+      <header class="section-header">
+        <div>
+          <h1>Achievements</h1>
+          <p class="subtitle">Earn badges by making sustainable choices</p>
+        </div>
+      </header>
+      <div class="achievements-grid" id="achievements-grid" aria-label="Achievement badges">
+        <!-- Populated by JS -->
+      </div>
+      <article class="streak-card">
+        <h2>🔥 Logging Streak</h2>
+        <div class="streak-number" id="streak-number" aria-live="polite">0</div>
+        <span>days</span>
+      </article>
+
+      <!-- Data Management -->
+      <article class="data-management">
+        <h2 class="chart-title">📦 Data Management</h2>
+        <div class="data-actions">
+          <button class="btn-secondary" id="btn-export-data" aria-label="Export all data as JSON">📤 Export Data</button>
+          <button class="btn-secondary" id="btn-import-data" aria-label="Import data from backup file">📥 Import Data</button>
+          <button class="btn-danger" id="btn-clear-data" aria-label="Clear all data permanently">🗑️ Clear All Data</button>
+          <input type="file" id="import-file" accept=".json" class="sr-only" aria-hidden="true">
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer id="app-footer" aria-label="Application footer">
+    <p>&copy; 2026 CarbonLens. Built with ♻️ for a sustainable future.</p>
+    <p class="footer-note">Data stored locally. Your privacy is respected — no data leaves your device.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
