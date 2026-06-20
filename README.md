@@ -4,7 +4,7 @@
 
 A smart, dynamic web application that helps individuals **understand, track, and reduce** their personal carbon footprint through intuitive activity logging, personalized insights, and gamification.
 
-🔗 **Live Demo:** [carbonlens on Google Cloud](https://carbonlens-app-dot-your-project.uc.r.appspot.com)
+🔗 **Live Demo:** [carbonlens on Google Cloud]((https://election-a2234.web.app/))
 
 ---
 
