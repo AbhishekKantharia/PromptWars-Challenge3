@@ -1,3 +1,5 @@
+/* global window, document */
+
 /* ============================================================
    CarbonLens — Charts Module (Canvas-based, zero dependencies)
    ============================================================ */

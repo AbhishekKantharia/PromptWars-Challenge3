@@ -1,3 +1,5 @@
+/* global document, window, localStorage, performance, requestAnimationFrame, FileReader, Blob, URL, confirm, location, setTimeout, clearTimeout, EMISSION_FACTORS, COUNTRY_AVERAGES, IDEAL_MONTHLY, CATEGORY_COLORS, CATEGORY_EMOJIS, SUBTYPE_EMOJIS, ACHIEVEMENTS, INSIGHTS_POOL, STORAGE_KEYS, loadProfile, saveProfile, loadActivities, saveActivities, todayStr, dateNDaysAgo, getTodayTotal, getWeekTotal, getMonthTotal, getCategoryTotals, getLast7DaysTotals, getStreak, computeEcoScore, sanitizeHTML, validateNumericInput, drawWeeklyChart, drawBreakdownChart, drawScoreRing */
+
 /* ============================================================
    CarbonLens — Main Application Logic
    ============================================================ */
@@ -259,101 +261,91 @@
      Log Forms — Input, Preview, and Submission
      ============================================================ */
   function setupLogForms() {
-    // Live emission estimation previews
-    setupPreview('transport', () => {
-      const type = document.querySelector('input[name="transport-type"]:checked')?.value || 'car';
-      const dist = parseFloat(document.getElementById('transport-dist').value) || 0;
-      return (EMISSION_FACTORS.transport[type] || 0) * dist;
-    });
-    setupPreview('food', () => {
-      const type = document.querySelector('input[name="food-type"]:checked')?.value || 'beef';
-      const srv = parseInt(document.getElementById('food-servings').value, 10) || 1;
-      return (EMISSION_FACTORS.food[type] || 0) * srv;
-    });
-    setupPreview('energy', () => {
-      const type = document.querySelector('input[name="energy-type"]:checked')?.value || 'electricity';
-      const amt = parseFloat(document.getElementById('energy-amount').value) || 0;
-      return (EMISSION_FACTORS.energy[type] || 0) * amt;
-    });
-    setupPreview('shopping', () => {
-      const type = document.querySelector('input[name="shopping-type"]:checked')?.value || 'clothing';
-      const qty = parseInt(document.getElementById('shopping-qty').value, 10) || 1;
-      return (EMISSION_FACTORS.shopping[type] || 0) * qty;
-    });
+    const config = {
+      transport: {
+        inputId: 'transport-dist',
+        min: 0,
+        max: 50000,
+        errorMsg: 'Please enter a valid distance.',
+        resetVal: '',
+        calc: (type, val) => (EMISSION_FACTORS.transport[type] || 0) * val,
+        desc: (type, val) => `${val} km by ${type}`,
+        defPrev: 0,
+        defType: 'car'
+      },
+      food: {
+        inputId: 'food-servings',
+        min: 1,
+        max: 100,
+        errorMsg: 'Please enter a valid number of servings (1-100).',
+        resetVal: '1',
+        calc: (type, val) => (EMISSION_FACTORS.food[type] || 0) * val,
+        desc: (type, val) => `${val} ${type} meal(s)`,
+        defPrev: (type) => EMISSION_FACTORS.food[type] || 0,
+        defType: 'beef'
+      },
+      energy: {
+        inputId: 'energy-amount',
+        min: 0.1,
+        max: 100000,
+        errorMsg: 'Please enter a valid amount.',
+        resetVal: '',
+        calc: (type, val) => (EMISSION_FACTORS.energy[type] || 0) * val,
+        desc: (type, val) => `${val} units of ${type}`,
+        defPrev: 0,
+        defType: 'electricity'
+      },
+      shopping: {
+        inputId: 'shopping-qty',
+        min: 1,
+        max: 1000,
+        errorMsg: 'Please enter a valid quantity (1-1000).',
+        resetVal: '1',
+        calc: (type, val) => (EMISSION_FACTORS.shopping[type] || 0) * val,
+        desc: (type, val) => `${val} ${type} item(s)`,
+        defPrev: (type) => EMISSION_FACTORS.shopping[type] || 0,
+        defType: 'clothing'
+      }
+    };
 
-    const transportDist = document.getElementById('transport-dist');
-    const foodServings = document.getElementById('food-servings');
-    const energyAmount = document.getElementById('energy-amount');
-    const shoppingQty = document.getElementById('shopping-qty');
+    Object.keys(config).forEach(cat => {
+      const c = config[cat];
+      const inputEl = document.getElementById(c.inputId);
 
-    // Clear aria-invalid on input
-    [transportDist, foodServings, energyAmount, shoppingQty].forEach(input => {
-      if (input) {
-        input.addEventListener('input', () => {
-          input.removeAttribute('aria-invalid');
+      // 1. Live preview setup
+      setupPreview(cat, () => {
+        const type = document.querySelector(`input[name="${cat}-type"]:checked`)?.value || c.defType;
+        const parsed = parseFloat(inputEl.value);
+        const val = isNaN(parsed) ? (cat === 'food' || cat === 'shopping' ? 1 : 0) : parsed;
+        return c.calc(type, val);
+      });
+
+      // 2. Clear invalid aria attribute on input
+      if (inputEl) {
+        inputEl.addEventListener('input', () => {
+          inputEl.removeAttribute('aria-invalid');
         });
       }
-    });
 
-    // Log buttons
-    document.getElementById('btn-log-transport').addEventListener('click', () => {
-      const type = document.querySelector('input[name="transport-type"]:checked')?.value;
-      const dist = validateNumericInput(transportDist.value, 0, 50000);
-      if (dist === null) {
-        showToast('Please enter a valid distance.');
-        transportDist.setAttribute('aria-invalid', 'true');
-        transportDist.focus();
-        return;
+      // 3. Log Button handler
+      const logBtn = document.getElementById(`btn-log-${cat}`);
+      if (logBtn) {
+        logBtn.addEventListener('click', () => {
+          const type = document.querySelector(`input[name="${cat}-type"]:checked`)?.value || c.defType;
+          const val = validateNumericInput(inputEl.value, c.min, c.max);
+          if (val === null) {
+            showToast(c.errorMsg);
+            inputEl.setAttribute('aria-invalid', 'true');
+            inputEl.focus();
+            return;
+          }
+          const co2 = c.calc(type, val);
+          addActivity(cat, type, co2, c.desc(type, val));
+          inputEl.value = c.resetVal;
+          const defP = typeof c.defPrev === 'function' ? c.defPrev(type) : c.defPrev;
+          updatePreview(cat, defP);
+        });
       }
-      const co2 = (EMISSION_FACTORS.transport[type] || 0) * dist;
-      addActivity('transport', type, co2, `${dist} km by ${type}`);
-      transportDist.value = '';
-      updatePreview('transport', 0);
-    });
-
-    document.getElementById('btn-log-food').addEventListener('click', () => {
-      const type = document.querySelector('input[name="food-type"]:checked')?.value;
-      const srv = validateNumericInput(foodServings.value, 1, 100);
-      if (srv === null) {
-        showToast('Please enter a valid number of servings (1-100).');
-        foodServings.setAttribute('aria-invalid', 'true');
-        foodServings.focus();
-        return;
-      }
-      const co2 = (EMISSION_FACTORS.food[type] || 0) * srv;
-      addActivity('food', type, co2, `${srv} ${type} meal(s)`);
-      foodServings.value = '1';
-      updatePreview('food', EMISSION_FACTORS.food[type]);
-    });
-
-    document.getElementById('btn-log-energy').addEventListener('click', () => {
-      const type = document.querySelector('input[name="energy-type"]:checked')?.value;
-      const amt = validateNumericInput(energyAmount.value, 0.1, 100000);
-      if (amt === null) {
-        showToast('Please enter a valid amount.');
-        energyAmount.setAttribute('aria-invalid', 'true');
-        energyAmount.focus();
-        return;
-      }
-      const co2 = (EMISSION_FACTORS.energy[type] || 0) * amt;
-      addActivity('energy', type, co2, `${amt} units of ${type}`);
-      energyAmount.value = '';
-      updatePreview('energy', 0);
-    });
-
-    document.getElementById('btn-log-shopping').addEventListener('click', () => {
-      const type = document.querySelector('input[name="shopping-type"]:checked')?.value;
-      const qty = validateNumericInput(shoppingQty.value, 1, 1000);
-      if (qty === null) {
-        showToast('Please enter a valid quantity (1-1000).');
-        shoppingQty.setAttribute('aria-invalid', 'true');
-        shoppingQty.focus();
-        return;
-      }
-      const co2 = (EMISSION_FACTORS.shopping[type] || 0) * qty;
-      addActivity('shopping', type, co2, `${qty} ${type} item(s)`);
-      shoppingQty.value = '1';
-      updatePreview('shopping', EMISSION_FACTORS.shopping[type]);
     });
   }
 

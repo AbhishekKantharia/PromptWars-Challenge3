@@ -1,3 +1,5 @@
+/* global localStorage, console */
+
 /* ============================================================
    CarbonLens — Data Layer & Carbon Emission Factors
    Sources: EPA, DEFRA 2024, IEA World Energy Outlook

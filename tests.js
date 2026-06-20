@@ -1,3 +1,5 @@
+/* global console, document, window, localStorage, EMISSION_FACTORS, COUNTRY_AVERAGES, IDEAL_MONTHLY, CATEGORY_COLORS, CATEGORY_EMOJIS, SUBTYPE_EMOJIS, ACHIEVEMENTS, INSIGHTS_POOL, STORAGE_KEYS, safeLoadJSON, loadProfile, saveProfile, loadActivities, saveActivities, todayStr, dateNDaysAgo, getTodayTotal, getWeekTotal, getMonthTotal, getCategoryTotals, getLast7DaysTotals, getStreak, computeEcoScore, sanitizeHTML, validateNumericInput, drawWeeklyChart, drawBreakdownChart, drawScoreRing */
+
 /* ============================================================
    CarbonLens — Test Suite (Zero-dependency, browser-based)
    Run: Open tests.html in a browser
